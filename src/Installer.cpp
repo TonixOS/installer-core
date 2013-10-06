@@ -117,7 +117,7 @@ namespace installer {
         i = last_element+1;
       }
     }
-      
+    
     //} while( wi != c_wizzard_order.end() );
     if( return_value == ui::DIALOG_DECISION_BTN_NEXT ) {
       return install();
@@ -265,6 +265,29 @@ namespace installer {
     // 
     // 
     
+    // 
+    // P R E P A R E   H O S T   D I S K
+    // 
+    tools::StorageLocalPointer storage( new tools::StorageLocal );
+    storage->setSettings(c_storage_config);
+    if( storage->createPartitionTable() == false ) {
+      std::cerr << "error while creating the partition table - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(100, 'M') == false ) {
+      std::cerr << "error while creating the swap partition - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(5) == false ) {
+      std::cerr << "error while creating the root partition - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(0, 'G', true) == false ) { // apply rest of the disk for lvm
+      std::cerr << "error while creating the srv partition - abort" << std::endl;
+      return 1;
+    }
+    storage->applyToSystem();
+    
     std::string installer_location("/usr/share/cloudos/installer/");
     std::string install_sh( installer_location + "install.sh" );
     std::vector<std::string> install_sh_args;
@@ -275,20 +298,8 @@ namespace installer {
     install_sh_ctx.stdout_behavior = ps::silence_stream();
     install_sh_ctx.environment = ps::self::get_environment(); 
     //install_sh_ctx.environment.erase("TMP"); 
-    /*
-     * export LOGFILE=/tmp/installer_mgt.log
-     e xport PW_FILE=/tmp/pws_mgt.txt         *
-     export CONFIG_HOST_IP=87.238.186.38
-     export CONFIG_DBMS_HOST=$CONFIG_HOST_IP
-     export CONFIG_KEYSTONE_IP=$CONFIG_HOST_IP
-     export CONFIG_RABBITMQ_IP=$CONFIG_HOST_IP
-     export CONFIG_GLANCE_IP=$CONFIG_HOST_IP
-     export CONFIG_PRIMARY_INTERFACE=eth0
-     export CONFIG_PART_MODE=msdos
-     
-     export USER_ADMIN_NAME=operator
-     export USER_ADMIN_PASSWORD=W4t45unny80rd
-     */
+    
+    
     std::string host_install_dir("/tmp/cloudos/installer/host-disk");
     install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                c_storage_config->device_path()));
     install_sh_ctx.environment.insert(ps::environment::value_type("LOGFILE",                  "/tmp/installer.log"));
@@ -316,13 +327,19 @@ namespace installer {
     // 
     ps::context mgt_install_sh_ctx;
     if( c_installer_config->install_management() ) {
-      std::string mgt_install_sh( installer_location + "create_vdisk.sh" );
+      // 
+      // P R E P A R E   M A N A G E M E N T   D I S K
+      //
+      tools::StorageLocalConfigPointer mgt_storage_config( new config::os::InstallerDisk );
+      mgt_storage_config->set_device_path( "/dev/loop0" );
+      
+      std::string create_vdisk_sh( installer_location + "create_vdisk.sh" );
       main_ip = "";
       mgt_install_sh_ctx.stdout_behavior = ps::silence_stream();
       mgt_install_sh_ctx.environment = ps::self::get_environment(); 
       
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("MGT_MODE",                 "on"));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                "dev/loop0"));
+      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                mgt_storage_config->device_path()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("LOGFILE",                  "/tmp/installer_mgt.log"));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("PW_FILE",                  "/tmp/pws_mgt.txt"));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("INSTALL_DIR",              "/tmp/cloudos/installer/mgt-disk"));
@@ -333,16 +350,48 @@ namespace installer {
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_KEYMAP",            c_system_config->keyboard_layout()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_CHARSET",           c_system_config->locale_charset()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOSTNAME",          c_system_config->hostname()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PRIMARY_INTERFACE", "eth0"));
+      mgt_install_sh_ctx.environment["CONFIG_PRIMARY_INTERFACE"] = "eth0";
       
-      ps::child mgt_install_sh_exe = ps::launch(mgt_install_sh, install_sh_args, mgt_install_sh_ctx);
+      ps::child create_vdisk_sh_exe = ps::launch(create_vdisk_sh, install_sh_args, mgt_install_sh_ctx);
+      ps::status create_vdisk_sh_status = create_vdisk_sh_exe.wait();
       
-      ps::status mgt_install_sh_status = mgt_install_sh_exe.wait();
+      // partitioning disk
+      if( create_vdisk_sh_status.exit_status() == 0 ) {
+        tools::StorageLocalPointer mgt_storage( new tools::StorageLocal );
+        mgt_storage->setSettings(mgt_storage_config);
+        if( mgt_storage->createPartitionTable() == false ) {
+          std::cerr << "error while creating the partition table - abort" << std::endl;
+          return 1;
+        }
+        if( mgt_storage->addPartition(100, 'M') == false ) {
+          std::cerr << "error while creating the swap partition - abort" << std::endl;
+          return 1;
+        }
+        if( mgt_storage->addPartition(0) == false ) {
+          std::cerr << "error while creating the root partition - abort" << std::endl;
+          return 1;
+        }
+        /*if( mgt_storage->addPartition(0, 'G', true) == false ) { // apply rest of the disk for lvm
+          std::cerr << "error while creating the srv partition - abort" << std::endl;
+          return 1;
+        }*/
+        mgt_storage->applyToSystem();
+        
+        std::string install_mgt( installer_location + "install.sh" );
+        ps::child install_mgt_exe = ps::launch(install_mgt, install_sh_args, mgt_install_sh_ctx);
+        
+        ps::status install_mgt_status = install_mgt_exe.wait();
+      }
+      
+      
     }
     
     ps::status install_sh_status = install_sh_exe.wait();
     
-    if( c_installer_config->install_management() ) {
+    if( install_sh_status.exit_status() == 0 && c_installer_config->install_management() ) {
+      // 
+      // Copy management to host and activate it
+      // 
       std::string mgt_finish_sh( installer_location + "finish_management.sh" );
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOST_ROOT", host_install_dir));
       ps::child mgt_finish_sh_exe = ps::launch(mgt_finish_sh, install_sh_args, mgt_install_sh_ctx);
@@ -350,7 +399,7 @@ namespace installer {
       mgt_finish_sh_exe.wait();
     }
     
-    return 0;
+    return install_sh_status.exit_status();
   }
 
   void Installer::createTempDirs() {
