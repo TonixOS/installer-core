@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   
   unsigned int retval = 0;
   
-  //YUILog::setLogFileName("test.log");
+  YUILog::setLogFileName("/tmp/installer.tool.log");
   
   try {
   
