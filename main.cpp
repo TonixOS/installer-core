@@ -27,6 +27,22 @@ int main(int argc, char **argv) {
     tools::StorageLocalPointer storage( new tools::StorageLocal );
     storage->setSettings(config);
     storage->getAvailableDisks();
+    if( storage->createPartitionTable() == false ) {
+      std::cerr << "error while creating the partition table - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(100, 'M') == false ) {
+      std::cerr << "error while creating the swap partition - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(5) == false ) {
+      std::cerr << "error while creating the root partition - abort" << std::endl;
+      return 1;
+    }
+    if( storage->addPartition(0, 'G', true) == false ) { // apply rest of the disk for lvm
+      std::cerr << "error while creating the srv partition - abort" << std::endl;
+      return 1;
+    }
     storage->applyToSystem();
     
   
