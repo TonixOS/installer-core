@@ -299,6 +299,16 @@ namespace installer {
     install_sh_ctx.environment = ps::self::get_environment(); 
     //install_sh_ctx.environment.erase("TMP"); 
     
+    // 
+    // P R E P A R E   H O S T   E N V
+    // 
+    std::string host_prepare_sh( installer_location + "check_disk.sh" );
+    install_sh_ctx.environment["DEST_DISK"] = c_storage_config->device_path();
+    if( ps::launch(host_prepare_sh, install_sh_args, install_sh_ctx).wait().exit_status() != 0 ) {
+      std::cerr << "Faild to prepare the host... see /tmp/check_disk.log for more information" << std::endl;
+      return 1;
+    }
+    
     
     std::string host_install_dir("/tmp/cloudos/installer/host-disk");
     install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                c_storage_config->device_path()));
@@ -357,7 +367,7 @@ namespace installer {
       
       // partitioning disk
       if( create_vdisk_sh_status.exit_status() == 0 ) {
-        tools::StorageLocalPointer mgt_storage( new tools::StorageLocal );
+        /*tools::StorageLocalPointer mgt_storage( new tools::StorageLocal );
         mgt_storage->setSettings(mgt_storage_config);
         if( mgt_storage->createPartitionTable() == false ) {
           std::cerr << "error while creating the partition table - abort" << std::endl;
@@ -371,11 +381,7 @@ namespace installer {
           std::cerr << "error while creating the root partition - abort" << std::endl;
           return 1;
         }
-        /*if( mgt_storage->addPartition(0, 'G', true) == false ) { // apply rest of the disk for lvm
-          std::cerr << "error while creating the srv partition - abort" << std::endl;
-          return 1;
-        }*/
-        mgt_storage->applyToSystem();
+        mgt_storage->applyToSystem();*/
         
         std::string install_mgt( installer_location + "install.sh" );
         ps::child install_mgt_exe = ps::launch(install_mgt, install_sh_args, mgt_install_sh_ctx);
