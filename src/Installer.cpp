@@ -19,7 +19,7 @@ namespace installer {
     // we will just iterate over the vector later, so order matters
     c_wizzard_order.push_back( SCREEN_LANGUAGE );
     c_wizzard_order.push_back( SCREEN_WELCOME );
-    c_wizzard_order.push_back( SCREEN_MODULE_SELECTION );
+    //c_wizzard_order.push_back( SCREEN_MODULE_SELECTION );
     c_wizzard_order.push_back( SCREEN_STORAGE );
     c_wizzard_order.push_back( SCREEN_NETWORK );
     //c_wizzard_order.push_back( SYSTEM );
@@ -153,7 +153,7 @@ namespace installer {
   
   ui::DialogUserDecision Installer::showScreenLanguage( short int p_dialog_flags ) {
     ui::DialogLanguagePointer dialog = ui::DialogLanguagePointer( new ui::DialogLanguage( p_dialog_flags ) );
-    dialog->setDialogTitle("Environment Settings");
+    dialog->setDialogTitle("Change your Settings");
     dialog->setSettings( c_system_config );
     
     dialog->show();
@@ -182,7 +182,7 @@ namespace installer {
   
   ui::DialogUserDecision Installer::showScreenNetwork ( short int p_dialog_flags ) {
     ui::DialogNetworkPointer dialog( new ui::DialogNetwork( p_dialog_flags ) );
-    dialog->setDialogTitle("Configure System Network");
+    dialog->setDialogTitle("Select Network Adapter");
     dialog->setSettings( c_network_config );
     
     dialog->show();
@@ -193,7 +193,7 @@ namespace installer {
   
   ui::DialogUserDecision Installer::showScreenStorage ( short int p_dialog_flags ) {
     ui::DialogStoragePointer dialog( new ui::DialogStorage( p_dialog_flags ) );
-    dialog->setDialogTitle("Configure Local Storage");
+    dialog->setDialogTitle("Storage space for Installation");
     dialog->setSettings( c_storage_config );
     
     dialog->show();
@@ -233,6 +233,7 @@ namespace installer {
     }
     
     c_system_config->set_hostname("cloudos-beta1");
+    c_neutron_config->set_public_ip_pool("10.151.0.0/24");
     
     
     std::string main_ip, default_interface;
