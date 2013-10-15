@@ -17,7 +17,7 @@ namespace installer {
     // create the order of main wizzard screens
     // NOTE: change order of screens HERE
     // we will just iterate over the vector later, so order matters
-    c_wizzard_order.push_back( SCREEN_LANGUAGE );
+    //c_wizzard_order.push_back( SCREEN_LANGUAGE );
     c_wizzard_order.push_back( SCREEN_WELCOME );
     //c_wizzard_order.push_back( SCREEN_MODULE_SELECTION );
     c_wizzard_order.push_back( SCREEN_STORAGE );
