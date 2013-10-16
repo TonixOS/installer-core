@@ -163,7 +163,7 @@ namespace installer {
 
   ui::DialogUserDecision Installer::showScreenWelcome( short int p_dialog_flags ) {
     ui::DialogWelcomePointer dialog = ui::DialogWelcomePointer( new ui::DialogWelcome( p_dialog_flags ) );
-    dialog->setDialogTitle("Interactive Cloud OS Installer - Welcome");
+    dialog->setDialogTitle("Interactive Cloud OS Installer");
     dialog->setSettings( c_settings_directory / "welcome.txt" );
     
     dialog->show();
