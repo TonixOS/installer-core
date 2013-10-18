@@ -355,8 +355,8 @@ namespace installer {
       ip_pool_start.setValue( ip_host.cidr() );
       ip_pool_start.setIncrementValue(1);
       
-      ip_pool_end.setValue( ip_origin.cidr() );
-      ip_pool_end.setIncrementValue(-2);
+      ip_pool_end.setValue( ip_origin.broadcast() );
+      ip_pool_end.setIncrementValue(-1);
       
       install_sh_ctx.environment["CONFIG_IP_GATEWAY"] = ip_gateway.ip();
       install_sh_ctx.environment["CONFIG_IP_HOST"]    = ip_host.cidr();
