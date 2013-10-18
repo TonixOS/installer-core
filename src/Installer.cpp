@@ -302,6 +302,31 @@ namespace installer {
     //install_sh_ctx.environment.erase("TMP"); 
     
     // 
+    //  Calculate IP addresses for HOST ENV
+    // 
+    
+    cloudos::tools::IPAddress ip_origin, ip_gateway, ip_host, ip_pool_start, ip_pool_end;
+    
+    ip_origin.setValue( c_neutron_config->public_ip_pool() );
+    
+    // get the right base
+    ip_origin.setValue( ip_origin.netaddress() + '/' + ip_origin.prefix() );
+    
+    // our gateway
+    ip_gateway.setValue( ip_origin.cidr() );
+    ip_gateway.setIncrementValue(1);
+    
+    // our own host
+    ip_host.setValue( ip_gateway.cidr() );
+    ip_host.setIncrementValue(1);
+    
+    ip_pool_start.setValue( ip_host.cidr() );
+    ip_pool_start.setIncrementValue(1);
+    
+    ip_pool_end.setValue( ip_origin.broadcast() );
+    ip_pool_end.setIncrementValue(-1);
+    
+    // 
     // P R E P A R E   H O S T   E N V
     // 
     std::string host_prepare_sh( installer_location + "check_disk.sh" );
@@ -310,10 +335,6 @@ namespace installer {
       std::cerr << "Faild to prepare the host... see /tmp/check_disk.log for more information" << std::endl;
       return 1;
     }
-    
-    
-    
-    
     
     std::string host_install_dir("/tmp/cloudos/installer/host-disk");
     install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                c_storage_config->device_path()));
@@ -332,31 +353,6 @@ namespace installer {
     
     if( c_installer_config->install_keystone() ) {
       install_sh_ctx.environment.insert(ps::environment::value_type("HOST_MODE",              "on"));
-      
-      // 
-      //  Calculate IP addresses for HOST ENV
-      // 
-      
-      cloudos::tools::IPAddress ip_origin, ip_gateway, ip_host, ip_pool_start, ip_pool_end;
-      
-      ip_origin.setValue( c_neutron_config->public_ip_pool() );
-      
-      // get the right base
-      ip_origin.setValue( ip_origin.netaddress() + '/' + ip_origin.prefix() );
-      
-      // our gateway
-      ip_gateway.setValue( ip_origin.cidr() );
-      ip_gateway.setIncrementValue(1);
-      
-      // our own host
-      ip_host.setValue( ip_gateway.cidr() );
-      ip_host.setIncrementValue(1);
-      
-      ip_pool_start.setValue( ip_host.cidr() );
-      ip_pool_start.setIncrementValue(1);
-      
-      ip_pool_end.setValue( ip_origin.broadcast() );
-      ip_pool_end.setIncrementValue(-1);
       
       install_sh_ctx.environment["CONFIG_IP_GATEWAY"] = ip_gateway.ip();
       install_sh_ctx.environment["CONFIG_IP_HOST"]    = ip_host.cidr();
@@ -390,8 +386,8 @@ namespace installer {
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("INSTALL_DIR",              "/tmp/cloudos/installer/mgt-disk"));
       
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PART_MODE",         part_mode));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOST_IP",           main_ip));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_DST_IP",           "10.150.0.3/24"));
+      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_IP_HOST",           ip_host.cidr()));
+      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_DST_IP",            ip_host.cidr()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_KEYMAP",            c_system_config->keyboard_layout()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_CHARSET",           c_system_config->locale_charset()));
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOSTNAME",          c_system_config->hostname()));
