@@ -21,6 +21,7 @@ namespace installer {
     c_wizzard_order.push_back( SCREEN_WELCOME );
     //c_wizzard_order.push_back( SCREEN_MODULE_SELECTION );
     c_wizzard_order.push_back( SCREEN_STORAGE );
+    c_wizzard_order.push_back( SCREEN_NEUTRON_SERVER_MAIN );
     c_wizzard_order.push_back( SCREEN_NETWORK );
     //c_wizzard_order.push_back( SYSTEM );
     
@@ -233,7 +234,7 @@ namespace installer {
     }
     
     c_system_config->set_hostname("cloudos-beta1");
-    c_neutron_config->set_public_ip_pool("10.151.0.0/24");
+    //c_neutron_config->set_public_ip_pool("10.150.0.0/24");
     
     
     std::string main_ip, default_interface;
@@ -311,6 +312,9 @@ namespace installer {
     }
     
     
+    
+    
+    
     std::string host_install_dir("/tmp/cloudos/installer/host-disk");
     install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                c_storage_config->device_path()));
     install_sh_ctx.environment.insert(ps::environment::value_type("LOGFILE",                  "/tmp/installer.log"));
@@ -328,6 +332,36 @@ namespace installer {
     
     if( c_installer_config->install_keystone() ) {
       install_sh_ctx.environment.insert(ps::environment::value_type("HOST_MODE",              "on"));
+      
+      // 
+      //  Calculate IP addresses for HOST ENV
+      // 
+      
+      cloudos::tools::IPAddress ip_origin, ip_gateway, ip_host, ip_pool_start, ip_pool_end;
+      
+      ip_origin.setValue( c_neutron_config->public_ip_pool() );
+      
+      // get the right base
+      ip_origin.setValue( ip_origin.netaddress() + '/' + ip_origin.prefix() );
+      
+      // our gateway
+      ip_gateway.setValue( ip_origin.cidr() );
+      ip_gateway.setIncrementValue(1);
+      
+      // our own host
+      ip_host.setValue( ip_gateway.cidr() );
+      ip_host.setIncrementValue(1);
+      
+      ip_pool_start.setValue( ip_host.cidr() );
+      ip_pool_start.setIncrementValue(1);
+      
+      ip_pool_end.setValue( ip_origin.cidr() );
+      ip_pool_end.setIncrementValue(-1);
+      
+      install_sh_ctx.environment["CONFIG_IP_GATEWAY"] = ip_gateway.ip();
+      install_sh_ctx.environment["CONFIG_IP_HOST"]    = ip_host.cidr();
+      install_sh_ctx.environment["CONFIG_IP_POOL_START"] = ip_pool_start.ip();
+      install_sh_ctx.environment["CONFIG_IP_POOL_END"] = ip_pool_end.ip();
     }
     
     ps::child install_sh_exe = ps::launch(install_sh, install_sh_args, install_sh_ctx);
