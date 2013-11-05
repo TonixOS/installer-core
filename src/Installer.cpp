@@ -218,6 +218,8 @@ namespace installer {
   unsigned int Installer::install() {
     
     // calculate the lvm service data volume size
+    // size is stored in GB, and we alocate 6GB for swap/root
+    // FIXME: we don't need service_data_size anymore... remove it, but check if there are dependencies within installer.sh
     int service_data_size = c_storage_config->size() - 6;
     // use rest of available storage, if there are less than 20GB available
     if( service_data_size > 20 ) { // if there are more than 20GiB available, use 80% of the storage
@@ -305,7 +307,7 @@ namespace installer {
     //  Calculate IP addresses for HOST ENV
     // 
     
-    cloudos::tools::IPAddress ip_origin, ip_gateway, ip_host, ip_pool_start, ip_pool_end;
+    cloudos::tools::IPAddress ip_origin, ip_gateway, ip_host, ip_pool_start, ip_pool_end, ip_mgt;
     
     ip_origin.setValue( c_neutron_config->public_ip_pool() );
     
@@ -325,6 +327,10 @@ namespace installer {
     
     ip_pool_end.setValue( ip_origin.broadcast() );
     ip_pool_end.setIncrementValue(-1);
+    
+    // our web management VM
+    ip_mgt.setValue( ip_host.cidr() );
+    ip_mgt.setIncrementValue(2); // increment 2, as the SDN router is between
     
     // 
     // P R E P A R E   H O S T   E N V
@@ -358,6 +364,7 @@ namespace installer {
       install_sh_ctx.environment["CONFIG_IP_HOST"]    = ip_host.cidr();
       install_sh_ctx.environment["CONFIG_IP_POOL_START"] = ip_pool_start.ip();
       install_sh_ctx.environment["CONFIG_IP_POOL_END"] = ip_pool_end.ip();
+      install_sh_ctx.environment["CONFIG_IP_MGT"]      = ip_mgt.ip();
     }
     
     ps::child install_sh_exe = ps::launch(install_sh, install_sh_args, install_sh_ctx);
