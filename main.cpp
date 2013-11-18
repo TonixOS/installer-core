@@ -28,7 +28,8 @@ int main(int argc, char **argv) {
     
     ui::DialogInstallerFinishedPointer dialog = ui::DialogInstallerFinishedPointer( new ui::DialogInstallerFinished( ui::SHOW_REBOOT_BTN ) );
     dialog->setDialogTitle("Interactive Cloud OS Installer FINISHED");
-    dialog->setManagementIP( installer->getManagementIP() );
+    std::string mgt_ip = installer->getManagementIP();
+    dialog->setManagementIP( mgt_ip );
     
     dialog->show();
     short btn = dialog->getPushedBtn();
