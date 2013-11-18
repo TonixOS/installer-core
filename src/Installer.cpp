@@ -337,6 +337,7 @@ namespace installer {
     // our web management VM
     ip_mgt.setValue( ip_host.cidr() );
     ip_mgt.setIncrementValue(2); // increment 2, as the SDN router is between
+    c_mgt_ip = ip_mgt.ip();
     
     // 
     // P R E P A R E   H O S T   E N V

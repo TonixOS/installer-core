@@ -82,7 +82,11 @@ namespace installer {
      */
     unsigned int run();
     
+    std::string getManagementIP() { return c_mgt_ip; }
+    
   private:
+    
+    std::string c_mgt_ip;
     
     fs::path c_settings_directory;
     
