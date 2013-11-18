@@ -217,6 +217,11 @@ namespace installer {
 
   unsigned int Installer::install() {
     
+    ui::DialogInstallerProcessPointer install_process_dialog = ui::DialogInstallerProcessPointer( new ui::DialogInstallerProcess( ui::SHOW_NO_BUTTONS ) );
+    install_process_dialog->setDialogTitle("Interactive Cloud OS Installation");
+    install_process_dialog->show();
+    
+    
     // calculate the lvm service data volume size
     // size is stored in GB, and we alocate 6GB for swap/root
     // FIXME: we don't need service_data_size anymore... remove it, but check if there are dependencies within installer.sh
@@ -269,6 +274,7 @@ namespace installer {
     // 
     // 
     
+    install_process_dialog->setNextState();
     // 
     // P R E P A R E   H O S T   D I S K
     // 
@@ -367,6 +373,7 @@ namespace installer {
       install_sh_ctx.environment["CONFIG_IP_MGT"]      = ip_mgt.ip();
     }
     
+    install_process_dialog->setNextState();
     ps::child install_sh_exe = ps::launch(install_sh, install_sh_args, install_sh_ctx);
     
     
@@ -400,6 +407,7 @@ namespace installer {
       mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOSTNAME",          c_system_config->hostname()));
       mgt_install_sh_ctx.environment["CONFIG_PRIMARY_INTERFACE"] = "eth0";
       
+      install_process_dialog->setNextState();
       ps::child create_vdisk_sh_exe = ps::launch(create_vdisk_sh, install_sh_args, mgt_install_sh_ctx);
       ps::status create_vdisk_sh_status = create_vdisk_sh_exe.wait();
       
@@ -431,6 +439,7 @@ namespace installer {
     }
     
     ps::status install_sh_status = install_sh_exe.wait();
+    install_process_dialog->setNextState();
     
     if( install_sh_status.exit_status() == 0 && c_installer_config->install_management() ) {
       // 
@@ -441,6 +450,7 @@ namespace installer {
       ps::child mgt_finish_sh_exe = ps::launch(mgt_finish_sh, install_sh_args, mgt_install_sh_ctx);
       
       mgt_finish_sh_exe.wait();
+      install_process_dialog->setNextState();
     }
     
     return install_sh_status.exit_status();

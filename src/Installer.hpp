@@ -19,6 +19,8 @@
 #include <cloudos/ui/DialogNetwork.hpp>
 #include <cloudos/ui/DialogNeutronServerMain.hpp>
 #include <cloudos/ui/DialogStorage.hpp>
+#include <cloudos/ui/DialogInstallerProcess.hpp>
+#include <cloudos/ui/DialogInstallerFinished.hpp>
 
 
 #include <cloudos/proto/OS.System.pb.h>
