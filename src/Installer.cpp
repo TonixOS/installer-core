@@ -61,6 +61,10 @@ namespace installer {
   unsigned int Installer::run() {
     ui::DialogUserDecision return_value;
     
+    // start copiing the tar file to tmp for faster install process
+    // this way, we copy all data to a tmpfs while the user is typing...
+    copyRpmsToTmp();
+    
     //std::vector<WIZZARD_SCREEN_TYPE>::iterator wi = c_wizzard_order.begin();
     int last_element = c_wizzard_order.size() - 1;
     short int dialog_flags;
@@ -212,6 +216,21 @@ namespace installer {
     dialog->show();
     c_neutron_config = dialog->getSettings();
     return dialog->getPushedBtn();
+  }
+
+  void Installer::copyRpmsToTmp() {
+    std::string cmd("/bin/cp");
+    
+    std::vector<std::string> args;
+    args.push_back(""); // the first arg has to empty
+    args.push_back("/usr/share/cloudos/installer/basesystem-rpms.tar");
+    args.push_back("/tmp/");
+    
+    ps::context ctx;
+    ctx.stdout_behavior = ps::silence_stream();
+    ctx.environment = ps::self::get_environment();
+    
+    c_copy_tar.reset(ps::launch(cmd, args, ctx));
   }
 
 
@@ -373,6 +392,11 @@ namespace installer {
       install_sh_ctx.environment["CONFIG_IP_POOL_END"] = ip_pool_end.ip();
       install_sh_ctx.environment["CONFIG_IP_MGT"]      = ip_mgt.ip();
     }
+    
+    // 
+    // okay, now it's time to wait, until the tar file is copied
+    // 
+    c_copy_tar->wait();
     
     install_process_dialog->setNextState();
     ps::child install_sh_exe = ps::launch(install_sh, install_sh_args, install_sh_ctx);

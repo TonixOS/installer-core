@@ -11,6 +11,7 @@
 // #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/process.hpp>
+#include <boost/optional.hpp>
 
 #include <cloudos/ui/Dialog.hpp>
 #include <cloudos/ui/DialogLanguage.hpp>
@@ -99,6 +100,8 @@ namespace installer {
      */
     fs::path c_temp_mountpoint;
     
+    boost::optional<ps::child> c_copy_tar;
+    
     // 
     // Wizzard order element
     // 
@@ -137,6 +140,8 @@ namespace installer {
     ui::DialogUserDecision showScreenSystem( short int p_dialog_flags );
     
     ui::DialogUserDecision showScreenNeutronServerMain( short int p_dialog_flags );
+    
+    void copyRpmsToTmp();
     
     /**
      * installs the system, based on the givven configuration
