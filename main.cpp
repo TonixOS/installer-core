@@ -18,6 +18,8 @@ int main(int argc, char **argv) {
   
   YUILog::setLogFileName("/tmp/installer.tool.log");
   
+  system("/bin/dmesg --console-off"); // disable kernel messages on console
+  
   try {
   
     cloudos::installer::Installer *installer = new cloudos::installer::Installer();
@@ -31,8 +33,8 @@ int main(int argc, char **argv) {
     short btn = dialog->getPushedBtn();
     
     if( btn & ui::DIALOG_DECISION_BTN_NEXT ) {
-      system("sync");
-      system("systemctl reboot");
+      system("/bin/sync");
+      system("/usr/bin/systemctl reboot");
     }
   
   } catch(std::exception& e) {
@@ -42,6 +44,8 @@ int main(int argc, char **argv) {
   if( retval == 1 ) {
     YUILog::milestone(YUILogComponent, __FILE__, __LINE__, __FUNCTION__) << "Installation process aborted, requested by user" << std::endl;
   }
+  
+  system("/bin/dmesg --console-on");
   
   return retval;
 }
