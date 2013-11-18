@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     dialog->show();
     short btn = dialog->getPushedBtn();
     
-    if( btn & ui::DIALOG_DECISION_BTN_REBOOT ) {
+    if( btn & ui::DIALOG_DECISION_BTN_NEXT ) {
       system("sync");
       system("systemctl reboot");
     }
