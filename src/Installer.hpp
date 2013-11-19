@@ -27,6 +27,7 @@
 #include <cloudos/proto/OS.System.pb.h>
 #include <cloudos/proto/OS.Network.pb.h>
 #include <cloudos/proto/OpenStack.NeutronServer.pb.h>
+#include <cloudos/system/Command.hpp>
 
 // system related headers
 
@@ -100,7 +101,7 @@ namespace installer {
      */
     fs::path c_temp_mountpoint;
     
-    boost::optional<ps::child> c_copy_tar;
+    system::Command c_cmd_copy_tar;
     
     // 
     // Wizzard order element

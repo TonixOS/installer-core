@@ -1,6 +1,5 @@
-#include <iostream>
 
-#include <stdlib.h>
+#include <boost/shared_ptr.hpp>
 
 #define YUILogComponent "cloudos-installer"
 #include <yui/YUILog.h>
@@ -9,6 +8,7 @@
 
 #include <cloudos/tools/StorageLocal.hpp>
 #include <cloudos/ui/DialogInstallerFinished.hpp>
+#include <cloudos/system/Command.hpp>
 
 using namespace cloudos;
 
@@ -18,25 +18,35 @@ int main(int argc, char **argv) {
   
   YUILog::setLogFileName("/tmp/installer.tool.log");
   
-  system("/bin/dmesg --console-off"); // disable kernel messages on console
+  // disable kernel messages on console
+  system::Command dmesg;
+  dmesg << "/bin/dmesg" << "--console-off";
+  dmesg.waitUntilFinished();
   
   try {
-  
-    cloudos::installer::Installer *installer = new cloudos::installer::Installer();
+    
+    boost::shared_ptr<installer::Installer> installer( new installer::Installer() );
     retval = installer->run();
     
     
     ui::DialogInstallerFinishedPointer dialog = ui::DialogInstallerFinishedPointer( new ui::DialogInstallerFinished( ui::SHOW_REBOOT_BTN ) );
     dialog->setDialogTitle("Interactive Cloud OS Installer FINISHED");
     dialog->setManagementIP( installer->getManagementIP() );
-    delete installer;
     
     dialog->show();
     short btn = dialog->getPushedBtn();
     
+    system::Command sync("/bin/sync");
+    sync.waitUntilFinished();
+    
+    dmesg.clearArguments();
+    dmesg << "--console-on";
+    dmesg.waitUntilFinished();
+    
     if( btn == ui::DIALOG_DECISION_BTN_NEXT ) {
-      system("/bin/sync");
-      system("/usr/bin/systemctl reboot");
+      system::Command systemctl;
+      systemctl << "/usr/bin/systemctl" << "reboot";
+      systemctl.waitUntilFinished();
     }
   
   } catch(std::exception& e) {
@@ -46,8 +56,6 @@ int main(int argc, char **argv) {
   if( retval == 1 ) {
     YUILog::milestone(YUILogComponent, __FILE__, __LINE__, __FUNCTION__) << "Installation process aborted, requested by user" << std::endl;
   }
-  
-  system("/bin/dmesg --console-on");
   
   return retval;
 }
