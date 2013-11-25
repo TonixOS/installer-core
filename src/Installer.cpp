@@ -296,17 +296,6 @@ namespace installer {
     storage->applyToSystem();
     
     std::string installer_location("/usr/share/cloudos/installer/");
-    /*
-    std::string install_sh( installer_location + "install.sh" );
-    std::vector<std::string> install_sh_args;
-    install_sh_args.push_back(""); // the first arg has to empty
-    install_sh_args.push_back( c_temp_mountpoint.string() );
-    
-    ps::context install_sh_ctx;
-    install_sh_ctx.stdout_behavior = ps::silence_stream();
-    install_sh_ctx.environment = ps::self::get_environment(); 
-    //install_sh_ctx.environment.erase("TMP"); 
-    */
     
     // 
     //  Calculate IP addresses for HOST ENV
@@ -342,20 +331,15 @@ namespace installer {
     // P R E P A R E   H O S T   E N V
     // 
     system::Command cmd_check_disk( installer_location + "check_disk.sh" );
+    cmd_check_disk.setDescription("check host storage environment");
     cmd_check_disk.setEnvironmentVar("DEST_DISK", c_storage_config->device_path());
     if( cmd_check_disk.waitUntilFinished() != 0 ) {
       std::cerr << "Faild to prepare the host... see /tmp/check_disk.log for more information" << std::endl;
       return 1;
     }
-    /*
-    std::string host_prepare_sh( installer_location + "check_disk.sh" );
-    install_sh_ctx.environment["DEST_DISK"] = c_storage_config->device_path();
-    if( ps::launch(host_prepare_sh, install_sh_args, install_sh_ctx).wait().exit_status() != 0 ) {
-      std::cerr << "Faild to prepare the host... see /tmp/check_disk.log for more information" << std::endl;
-      return 1;
-    }*/
     
     system::Command cmd_install_sh;
+    cmd_install_sh.setDescription("install host system");
     cmd_install_sh << installer_location + "install.sh" << c_temp_mountpoint.string();
     
     cmd_install_sh.setEnvironmentVar("DEST_DISK",                c_storage_config->device_path());
@@ -371,22 +355,6 @@ namespace installer {
     cmd_install_sh.setEnvironmentVar("CONFIG_PRIMARY_INTERFACE", default_interface);
     cmd_install_sh.setEnvironmentVar("CONFIG_PUBLIC_IP_POOL",    c_neutron_config->public_ip_pool());
     
-    /*
-    std::string host_install_dir("/tmp/cloudos/installer/host-disk");
-    install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                c_storage_config->device_path()));
-    install_sh_ctx.environment.insert(ps::environment::value_type("LOGFILE",                  "/tmp/installer.log"));
-    install_sh_ctx.environment.insert(ps::environment::value_type("PW_FILE",                  "/tmp/pws.txt"));
-    install_sh_ctx.environment.insert(ps::environment::value_type("INSTALL_DIR",              host_install_dir));
-    install_sh_ctx.environment.insert(ps::environment::value_type("SERVICE_DATA_SIZE",        sds));
-    
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PART_MODE",         part_mode));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOST_IP",           main_ip));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_KEYMAP",            c_system_config->keyboard_layout()));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_CHARSET",           c_system_config->locale_charset()));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOSTNAME",          c_system_config->hostname()));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PRIMARY_INTERFACE", default_interface));
-    install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PUBLIC_IP_POOL",    c_neutron_config->public_ip_pool()));*/
-    
     if( c_installer_config->install_keystone() ) {
       cmd_install_sh.setEnvironmentVar("HOST_MODE",            "on");
       cmd_install_sh.setEnvironmentVar("CONFIG_IP_GATEWAY",    ip_gateway.ip());
@@ -394,14 +362,6 @@ namespace installer {
       cmd_install_sh.setEnvironmentVar("CONFIG_IP_POOL_START", ip_pool_start.ip());
       cmd_install_sh.setEnvironmentVar("CONFIG_IP_POOL_END",   ip_pool_end.ip());
       cmd_install_sh.setEnvironmentVar("CONFIG_IP_MGT",        ip_mgt.ip());
-      /*
-      install_sh_ctx.environment.insert(ps::environment::value_type("HOST_MODE",              "on"));
-      
-      install_sh_ctx.environment["CONFIG_IP_GATEWAY"] = ip_gateway.ip();
-      install_sh_ctx.environment["CONFIG_IP_HOST"]    = ip_host.cidr();
-      install_sh_ctx.environment["CONFIG_IP_POOL_START"] = ip_pool_start.ip();
-      install_sh_ctx.environment["CONFIG_IP_POOL_END"] = ip_pool_end.ip();
-      install_sh_ctx.environment["CONFIG_IP_MGT"]      = ip_mgt.ip();*/
     }
     
     // 
@@ -410,45 +370,20 @@ namespace installer {
     c_cmd_copy_tar.waitUntilFinished();
     
     install_process_dialog->setNextState();
-    //ps::child install_sh_exe = ps::launch(install_sh, install_sh_args, install_sh_ctx);
     cmd_install_sh.start();
-    
     
     // 
     // M A N A G E M E N T
     // 
-    ps::context mgt_install_sh_ctx;
     if( c_installer_config->install_management() ) {
       // 
       // P R E P A R E   M A N A G E M E N T   D I S K
       //
       tools::StorageLocalConfigPointer mgt_storage_config( new config::os::InstallerDisk );
       mgt_storage_config->set_device_path( "/dev/loop0" );
-      /*
-      std::string create_vdisk_sh( installer_location + "create_vdisk.sh" );
-      main_ip = "";
-      mgt_install_sh_ctx.stdout_behavior = ps::silence_stream();
-      mgt_install_sh_ctx.environment = ps::self::get_environment(); 
-      
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("MGT_MODE",                 "on"));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("DEST_DISK",                mgt_storage_config->device_path()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("LOGFILE",                  "/tmp/installer_mgt.log"));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("PW_FILE",                  "/tmp/pws_mgt.txt"));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("INSTALL_DIR",              "/tmp/cloudos/installer/mgt-disk"));
-      
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_PART_MODE",         part_mode));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_IP_HOST",           ip_host.cidr()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_DST_IP",            ip_host.cidr()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_KEYMAP",            c_system_config->keyboard_layout()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_CHARSET",           c_system_config->locale_charset()));
-      mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOSTNAME",          c_system_config->hostname()));
-      mgt_install_sh_ctx.environment["CONFIG_PRIMARY_INTERFACE"] = "eth0";
-      
-      install_process_dialog->setNextState();
-      ps::child create_vdisk_sh_exe = ps::launch(create_vdisk_sh, cmd_install_sh.getEnvironment(), mgt_install_sh_ctx);
-      ps::status create_vdisk_sh_status = create_vdisk_sh_exe.wait();*/
       
       system::Command cmd_vdisk_create( installer_location + "create_vdisk.sh" );
+      cmd_vdisk_create.setDescription("prepare management VM disk");
       cmd_vdisk_create.setEnvironment( cmd_install_sh.getEnvironment() );
       cmd_vdisk_create.setEnvironmentVar("MGT_MODE", "               on");
       cmd_vdisk_create.setEnvironmentVar("DEST_DISK",                mgt_storage_config->device_path());
@@ -461,36 +396,14 @@ namespace installer {
       cmd_vdisk_create.removeEnvironmentVar("HOST_MODE");
       
       // partitioning disk
-      //if( create_vdisk_sh_status.exit_status() == 0 ) {
       if( cmd_vdisk_create.waitUntilFinished() == 0 ) {
-        /*tools::StorageLocalPointer mgt_storage( new tools::StorageLocal );
-        mgt_storage->setSettings(mgt_storage_config);
-        if( mgt_storage->createPartitionTable() == false ) {
-          std::cerr << "error while creating the partition table - abort" << std::endl;
-          return 1;
-        }
-        if( mgt_storage->addPartition(100, 'M') == false ) {
-          std::cerr << "error while creating the swap partition - abort" << std::endl;
-          return 1;
-        }
-        if( mgt_storage->addPartition(0) == false ) {
-          std::cerr << "error while creating the root partition - abort" << std::endl;
-          return 1;
-        }
-        mgt_storage->applyToSystem();*/
         
         system::Command cmd_install_mgt( installer_location + "install.sh" );
+        cmd_install_mgt.setDescription("install management VM system");
         cmd_install_mgt.setEnvironment( cmd_vdisk_create.getEnvironment() );
         cmd_install_mgt.waitUntilFinished();
-        /*
-        std::string install_mgt( installer_location + "install.sh" );
-        ps::child install_mgt_exe = ps::launch(install_mgt, cmd_install_sh.getEnvironment(), mgt_install_sh_ctx);
-        
-        ps::status install_mgt_status = install_mgt_exe.wait();*/
       }
     }
-    
-    //ps::status install_sh_status = install_sh_exe.wait();
     
     unsigned short install_retval = cmd_install_sh.waitUntilFinished();
     
@@ -500,12 +413,9 @@ namespace installer {
       // Copy management to host and activate it
       // 
       system::Command cmd_finish( installer_location + "finish_management.sh" );
-      cmd_finish.setEnvironmentVar("CONFIG_HOST_ROOT", cmd_install_sh.getEnvironment().at("CONFIG_HOST_ROOT"));
-      //std::string mgt_finish_sh( installer_location + "finish_management.sh" );
-      //mgt_install_sh_ctx.environment.insert(ps::environment::value_type("CONFIG_HOST_ROOT", host_install_dir));
-      //ps::child mgt_finish_sh_exe = ps::launch(mgt_finish_sh, install_sh_args, mgt_install_sh_ctx);
+      cmd_finish.setDescription("finish the management installation");
+      cmd_finish.setEnvironmentVar("CONFIG_HOST_ROOT", "/tmp/cloudos/installer/mgt-disk");
       
-      //mgt_finish_sh_exe.wait();
       cmd_finish.waitUntilFinished();
       install_process_dialog->setNextState();
     }
