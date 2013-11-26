@@ -396,13 +396,14 @@ namespace installer {
       cmd_vdisk_create.removeEnvironmentVar("HOST_MODE");
       
       // partitioning disk
-      if( cmd_vdisk_create.waitUntilFinished() == 0 ) {
+      //if( cmd_vdisk_create.waitUntilFinished() == 0 ) {
         
         system::Command cmd_install_mgt( installer_location + "install.sh" );
         cmd_install_mgt.setDescription("install management VM system");
         cmd_install_mgt.setEnvironment( cmd_vdisk_create.getEnvironment() );
+        install_process_dialog->setNextState();
         cmd_install_mgt.waitUntilFinished();
-      }
+      //} // FIXME: report, if command failed...
     }
     
     unsigned short install_retval = cmd_install_sh.waitUntilFinished();
