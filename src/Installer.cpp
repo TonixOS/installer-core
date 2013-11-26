@@ -385,7 +385,7 @@ namespace installer {
       system::Command cmd_vdisk_create( installer_location + "create_vdisk.sh" );
       cmd_vdisk_create.setDescription("prepare management VM disk");
       cmd_vdisk_create.setEnvironment( cmd_install_sh.getEnvironment() );
-      cmd_vdisk_create.setEnvironmentVar("MGT_MODE", "               on");
+      cmd_vdisk_create.setEnvironmentVar("MGT_MODE",                 "on");
       cmd_vdisk_create.setEnvironmentVar("DEST_DISK",                mgt_storage_config->device_path());
       cmd_vdisk_create.setEnvironmentVar("LOGFILE",                  "/tmp/installer_mgt.log");
       cmd_vdisk_create.setEnvironmentVar("PW_FILE",                  "/tmp/pws_mgt.txt");
