@@ -9,9 +9,10 @@
 #include <sstream>
 
 // #include <boost/program_options.hpp>
+#include <boost/container/stable_vector.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/process.hpp>
 #include <boost/optional.hpp>
+#include <boost/thread.hpp>
 
 #include <cloudos/ui/Dialog.hpp>
 #include <cloudos/ui/DialogLanguage.hpp>
@@ -24,19 +25,12 @@
 #include <cloudos/ui/DialogInstallerFinished.hpp>
 
 
+#include <cloudos/core/Object.hpp>
 #include <cloudos/proto/OS.System.pb.h>
 #include <cloudos/proto/OS.Network.pb.h>
 #include <cloudos/proto/OpenStack.NeutronServer.pb.h>
 #include <cloudos/system/Command.hpp>
-
-// system related headers
-
-/**
- * we need to mount/unmount our destination disk...
- */
-extern "C" {
-#include <sys/mount.h>
-}
+#include <cloudos/system/InstallerHostSystem.hpp>
 
 //namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -44,8 +38,6 @@ namespace ps = boost::process;
 
 namespace cloudos {
 namespace installer {
-  
-  typedef boost::shared_ptr<pb::Message> MessagePointer;
   
   enum WIZZARD_SCREEN_TYPE {
     SCREEN_LANGUAGE         =  0,
@@ -67,10 +59,13 @@ namespace installer {
     SCREEN_NEUTRON_SERVER_DETAILS  = 57
   };
   
-  class Installer {
+  class Installer : public core::Object {
   public:
     Installer();
     ~Installer();
+    
+    typedef boost::container::stable_vector<WIZZARD_SCREEN_TYPE> ScreenTypeVector;
+    typedef boost::shared_ptr<boost::thread>                     ThreadPointer;
     
     /**
      * - launches the installer GUI which asks the user about the settings.
@@ -84,51 +79,102 @@ namespace installer {
      */
     unsigned int run();
     
-    std::string getManagementIP() { return c_mgt_ip; }
-    
   private:
+    /**
+     * Our core (template) installer instance
+     */
+    system::InstallerCoreSystemPointer c_core_install;
+    
+    /**
+     * Pointer to the thread, which will create our install template
+     */
+    ThreadPointer c_core_install_thread;
+    
+    /**
+     * Our host installer instance
+     */
+    system::InstallerHostSystemPointer c_host_install;
+    
+    /**
+     * Pointer to the thread, which will install a host system
+     */
+    ThreadPointer c_host_install_thread;
+    
+    system::InstallerManagementSystemPointer c_mgt_install;
+    
+    /**
+     * Pointer to the thread, which will install a management system
+     */
+    ThreadPointer c_mgt_install_thread;
     
     std::string c_mgt_ip;
     
     fs::path c_settings_directory;
     
-    fs::path c_temp_directory;
-    fs::path c_temp_settings_directory;
+    /**
+     * Our default network config file
+     */
+    fs::path c_config_file_network;
     
     /**
-     * Our mountpoint where we will mount the root disk
-     * Here, we will install our system.
+     * Our default system config file
      */
-    fs::path c_temp_mountpoint;
+    fs::path c_config_file_system;
     
-    system::Command c_cmd_copy_tar;
+    /**
+     * Our default installer config file
+     */
+    fs::path c_config_file_installer;
+    
+    /**
+     * Our default storage config file
+     */
+    fs::path c_config_file_storage;
+    
+    /**
+     * Our default storage config file
+     */
+    fs::path c_config_file_neutron;
+    
+    fs::path c_temp_directory;
+    fs::path c_temp_settings_directory;
     
     // 
     // Wizzard order element
     // 
-    std::vector<WIZZARD_SCREEN_TYPE> c_wizzard_order;
+    ScreenTypeVector c_wizzard_order;
     
     // 
     // configuration objects
     // 
     boost::shared_ptr<config::os::System>               c_system_config;
     boost::shared_ptr<config::os::Installer>            c_installer_config;
-    tools::StorageLocalConfigPointer                    c_storage_config;
-    std::set<tools::NetworkInterfaceConfigPointer>      c_network_config;
+    system::HDDisk::ConfigPointer                       c_storage_config;
+    tools::NetworkInterface::ConfigPointer              c_network_config;
     
     boost::shared_ptr<config::openstack::NeutronServer> c_neutron_config;
     
-    std::string c_selected_interface; //TODO
+    /**
+     * If our launch of the core template installation prepared successful
+     * 
+     * Required for isValid() == true
+     */
+    bool c_start_install_template_success;
     
     // 
     // init some
     // 
-    void loadSettingsFromFilesystem();
+    bool loadSettingsFromFilesystem();
     
     /**
-     * creates the /tmp/installer/... directories
+     * Checks, if we met all requirements
      */
-    void createTempDirs();
+    virtual void checkIsValid() override;
+    
+    /**
+     * Starts the template installation process in the background
+     */
+    bool startCreateInstallTemplate();
     
     // 
     // wizzard screens
@@ -142,8 +188,6 @@ namespace installer {
     
     ui::DialogUserDecision showScreenNeutronServerMain( short int p_dialog_flags );
     
-    void copyRpmsToTmp();
-    
     /**
      * installs the system, based on the givven configuration
      */
@@ -153,7 +197,7 @@ namespace installer {
      * checks, if the givven wizzard is set in c_wizzard_order
      * returns c_wizzard_order.end() if not found
      */
-    std::vector<WIZZARD_SCREEN_TYPE>::iterator isScreenSet( WIZZARD_SCREEN_TYPE p_screen );
+    ScreenTypeVector::iterator isScreenSet( WIZZARD_SCREEN_TYPE p_screen );
     
     /**
      * Will insert/remove configuration screens from the wizzard
