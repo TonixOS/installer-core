@@ -1,4 +1,4 @@
-project(cloudos-installer)
+project(installer-core)
 cmake_minimum_required(VERSION 2.8)
 set( CMAKE_VERBOSE_MAKEFILE on )
 #set( CMAKE_CXX_FLAGS "-fsanitize=address -std=c++11" )
@@ -7,10 +7,10 @@ set( CMAKE_BUILD_TYPE debug )
 add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 add_definitions(-DBOOST_ALL_DYN_LINK)
 
-add_executable(cloudos-installer main.cpp
+add_executable(installer-core main.cpp
                                  src/Installer.cpp
                 )
-target_link_libraries(cloudos-installer cloudos
+target_link_libraries(installer-core cloudos
                                         boost_filesystem
 					boost_system
 					boost_log
@@ -22,5 +22,5 @@ target_link_libraries(cloudos-installer cloudos
 					pthread
                         )
 
-install(TARGETS cloudos-installer RUNTIME DESTINATION bin)
+install(TARGETS installer-core RUNTIME DESTINATION bin)
 

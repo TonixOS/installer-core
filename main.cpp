@@ -12,7 +12,7 @@
 #include <boost/log/expressions/formatters.hpp>
 #include <boost/thread.hpp>
 
-#define YUILogComponent "cloudos-installer"
+#define YUILogComponent "installer-core"
 #include <yui/YUILog.h>
 
 #include "src/Installer.hpp"
