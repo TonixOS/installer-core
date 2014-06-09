@@ -10,7 +10,7 @@ Summary:        Our core system installer
 Version:        0.98
 Release:        1
 License:        GPLv2
-Url:            http://cloudos.internet.de
+Url:            http://projects.cloudversity.org/projects/%{name}
 Group:          System/Essentials
 Source:         %{name}-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
