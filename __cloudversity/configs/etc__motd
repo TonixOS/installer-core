@@ -1,0 +1,13 @@
+Welcome to the Interactive Cloud OS
+
+Here are some short hints:
+--------------------------
+  * we use systemd
+    => shutdown the system with: systemctl poweroff
+    => reboot the system with:   systemctl reboot
+    => see log file content:     journalctl
+  * install the Interactive Cloud OS with
+    => execute and follow the instructions: cloudos-installer
+  You will find more information on http://cloudos.internet.de
+
+

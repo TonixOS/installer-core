@@ -1,0 +1,17 @@
+
+Welcome to Interactive Cloud OS Version 0.97.
+
+Interactive Cloud OS Version 0.97
+Copyright (C) 2013 Interactive Cloud OS project and contributors.
+
+There is absolutely NO warranty, not even for MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+You may redistribute copies of Interactive Cloud OS under the terms of the
+respective licenses.
+
+
+WARNING: This Installation will delete any existing data on your computer.
+
+DO YOU WANT TO PROCEED?
+
+

@@ -1,0 +1,12 @@
+[Unit]
+Description=CloudOS Installer Service - will start the Installer
+ConditionKernelCommandLine=installer
+
+[Service]
+Type=idle
+ExecStart=/sbin/agetty -a root -l /usr/bin/cloudos-installer tty6 38400
+Restart=always
+RestartSec=0
+
+[Install]
+WantedBy=default.target

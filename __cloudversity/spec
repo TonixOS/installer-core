@@ -1,0 +1,94 @@
+#
+# Copyright (c) 2013,2014 Cloudversity Project, Bad Homburg, Germany.
+#
+# This file is licensed under the terms of the Attribution-ShareAlike 3.0 Unported
+# see http://creativecommons.org/licenses/by-sa/3.0/legalcode for details
+
+
+Name:           installer-core
+Summary:        Our core system installer
+Version:        0.98
+Release:        1
+License:        GPLv2
+Url:            http://cloudos.internet.de
+Group:          System/Essentials
+Source:         %{name}-%{version}.tar.xz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+# rpm will only detect libyui, but we need libyui-ncurses too
+Requires:       cloudos-postinstall
+Requires:       libyui-ncurses
+Requires:       cpio
+
+BuildRequires:  cmake
+BuildRequires:  libyui-dev
+BuildRequires:  libyui-ncurses-dev
+BuildRequires:  parted-dev
+BuildRequires:  libboost-dev
+BuildRequires:  libprotobuf-dev
+BuildRequires:  cloudos-postinstall
+BuildRequires:  libcloudos-dev
+
+
+# ====================================== #
+#                Binary                  #
+# ====================================== #
+%description
+This installer is able to install the Cloudversity Core OS on your system
+
+
+%prep
+%setup -q
+
+# set our current version
+#find . -name '*.cpp' -exec sed -i 's/__CLOUDOS__VERSION__/%{version}/g' {} \;
+
+%build
+#
+#  Build the installer software
+#
+%{export_wanted_compiler}
+
+mkdir build
+cd build/
+cmake -DCMAKE_INSTALL_PREFIX=/usr ../
+make %{?_smp_mflags}
+
+%install
+# cleanup
+rm -rf ${RPM_BUILD_ROOT}
+
+cd build/
+%make_install
+
+# do some common stuff
+/usr/share/cloudos/rpm/post-install_helper.sh %{buildroot} %{_sourcedir}
+
+#
+# create our basesystem-rpms.tar file
+#
+#bash %{_sourcedir}/collect_installer_packages.sh ${RPM_BUILD_ROOT}
+
+%post
+systemctl enable %{name}.service
+
+%files
+%defattr(-,root,root)
+/etc/motd
+%config(noreplace) /etc/cloudos/installer/settings/
+/usr/bin/cloudos-installer
+%attr(0644,root,root) /usr/share/cloudos/installer/management.template.qcow2.xz
+%attr(0755,root,root) /usr/share/cloudos/installer/finish_management.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/install.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/install_finish.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/prepare_chroot.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/prepare_disk.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/create_vdisk.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/check_disk.sh
+%attr(0755,root,root) /usr/share/cloudos/installer/zypper_install_rpms.sh
+# /usr/share/cloudos/installer/basesystem-rpms.tar
+/usr/lib/systemd/system/%{name}.service
+
+%changelog
+
+# vim: set ft=spec:
