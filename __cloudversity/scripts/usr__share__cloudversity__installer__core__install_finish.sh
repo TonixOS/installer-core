@@ -4,7 +4,7 @@
 exec >>/tmp/installer.log 2>&1
 
 ROOT_DIR=`cat /tmp/INSTALLER_ROOT_DIR`
-INSTALLER_DIR=/usr/share/cloudos/installer
+INSTALLER_DIR=/usr/share/cloudversity/installer/core
 
 #
 # prepare chrooting

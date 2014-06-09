@@ -6,7 +6,7 @@ exec >/tmp/finish_mgt.log 2>&1
 
 IMG=/tmp/mgt.raw
 ROOT_DIR=$INSTALL_DIR
-INSTALLER_DIR=/usr/share/cloudos/installer
+INSTALLER_DIR=/usr/share/cloudversity/installer/core
 
 . $ROOT_DIR/etc/openstack/shell.config.sh
 
@@ -26,7 +26,7 @@ umount $ROOT_DIR/
 
 losetup -D
 
-qemu-img convert -f raw -O qcow2 $IMG /tmp/cloudos/installer/host-disk/srv/management_root.qcow2
+qemu-img convert -f raw -O qcow2 $IMG /tmp/cloudversity/installer/core/host-disk/srv/management_root.qcow2
 
 sync
 

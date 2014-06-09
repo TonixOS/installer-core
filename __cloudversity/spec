@@ -75,18 +75,18 @@ systemctl enable %{name}.service
 %files
 %defattr(-,root,root)
 /etc/motd
-%config(noreplace) /etc/cloudos/installer/settings/
+%config(noreplace) /etc/cloudversity/installer/core/settings/
 /usr/bin/cloudos-installer
-%attr(0644,root,root) /usr/share/cloudos/installer/management.template.qcow2.xz
-%attr(0755,root,root) /usr/share/cloudos/installer/finish_management.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/install.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/install_finish.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/prepare_chroot.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/prepare_disk.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/create_vdisk.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/check_disk.sh
-%attr(0755,root,root) /usr/share/cloudos/installer/zypper_install_rpms.sh
-# /usr/share/cloudos/installer/basesystem-rpms.tar
+%attr(0644,root,root) /usr/share/cloudversity/installer/core/management.template.qcow2.xz
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/finish_management.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/install.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/install_finish.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/prepare_chroot.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/prepare_disk.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/create_vdisk.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/check_disk.sh
+%attr(0755,root,root) /usr/share/cloudversity/installer/core/zypper_install_rpms.sh
+# /usr/share/cloudversity/installer/core/basesystem-rpms.tar
 /usr/lib/systemd/system/%{name}.service
 
 %changelog

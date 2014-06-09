@@ -8,7 +8,7 @@ env|sort || true
 lsmod | grep loop || modprobe loop max_part=5 max_loop=2 || true
 
 IMG=/tmp/mgt.raw
-INSTALLER_DIR=/usr/share/cloudos/installer
+INSTALLER_DIR=/usr/share/cloudversity/installer/core
 TEMPLATE_NAME=management.template.qcow2
 
 # copy image template to RAM

@@ -21,10 +21,10 @@ RPMS_DIR="$ROOT_DIR/rpms"
 # our installer binary needs the root dir too...
 echo -n $ROOT_DIR > /tmp/INSTALLER_ROOT_DIR
 
-INSTALLER_DIR=/usr/share/cloudos/installer
+INSTALLER_DIR=/usr/share/cloudversity/installer/core
 
 . /usr/lib/cloudos/libinstaller.lib.sh
-. /usr/share/cloudos/installer/prepare_disk.sh
+. /usr/share/cloudversity/installer/core/prepare_disk.sh
 
 
 # ===========================
@@ -40,8 +40,8 @@ cd $RPMS_DIR
 tar -xvf /tmp/basesystem-rpms.tar
 
 # if we should install some additional rpms (like the cloudos-installer for a live cd) too...
-if [ -d /usr/share/cloudos/installer/additional_rpms/ ]; then
-  cp -av /usr/share/cloudos/installer/additional_rpms/*.rpm core/
+if [ -d /usr/share/cloudversity/installer/core/additional_rpms/ ]; then
+  cp -av /usr/share/cloudversity/installer/core/additional_rpms/*.rpm core/
 fi
 
 cd $ROOT_DIR
@@ -222,7 +222,7 @@ for mountpoint in dev/shm dev/pts sys proc dev boot; do
 done
 
 # save our logfile to disk
-cp /tmp/*.log /tmp/cloudos/installer/host-disk/root/
+cp /tmp/*.log /tmp/cloudversity/installer/core/host-disk/root/
 
 sync
 
