@@ -16,7 +16,6 @@ Source:         %{name}-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 # rpm will only detect libyui, but we need libyui-ncurses too
-Requires:       cloudos-postinstall
 Requires:       libyui-ncurses
 Requires:       cpio
 
@@ -76,7 +75,7 @@ systemctl enable %{name}.service
 %defattr(-,root,root)
 /etc/motd
 %config(noreplace) /etc/cloudversity/installer/core/settings/
-/usr/bin/cloudos-installer
+/usr/bin/%{name}
 %attr(0644,root,root) /usr/share/cloudversity/installer/core/management.template.qcow2.xz
 %attr(0755,root,root) /usr/share/cloudversity/installer/core/finish_management.sh
 %attr(0755,root,root) /usr/share/cloudversity/installer/core/install.sh
